@@ -1,6 +1,6 @@
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-export BASILISK="${SCRIPT_DIR}/basilisk/src"
-unset SCRIPT_DIR
+_PROJECT_CONFIG_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+export BASILISK="${_PROJECT_CONFIG_DIR}/basilisk/src"
+unset _PROJECT_CONFIG_DIR
 
 if [ ! -d "$BASILISK" ]; then
   echo "Error: BASILISK directory not found: $BASILISK" >&2

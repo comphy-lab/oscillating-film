@@ -120,8 +120,8 @@ event init(t = 0){
 Adaptive mesh refinement driven by interfaces, curvature, velocity, and
 conformation fields.
 */
+scalar KAPPA1[], KAPPA2[], trA[];
 event adapt(i++){
-  scalar KAPPA1[], KAPPA2[], trA[];
   curvature(f1, KAPPA1);
   curvature(f2, KAPPA2);
   foreach(){

@@ -2,22 +2,22 @@
 # Base parameter file for oscillating thin-film simulations.
 # Media: lower (f1), film (f), upper (f2).
 
-CaseNo=1000
+CaseNo=1001
 
 # Numerical controls
 MAXlevel=9
 tmax=10.0
 
 # Lower medium (f1)
-Ohl=1e-1
+Ohl=1e0
 Ecl=0.0
 Del=0.0
 
 # Film (f)
 Ohf=1e-2
 hf=2e-2
-Ecf=0.0
-Def=0.0
+Ecf=0.1
+Def=1e30
 
 # Upper medium (f2)
 Ohu=1e-1
