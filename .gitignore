@@ -65,3 +65,6 @@ basilisk/
 
 # Local assistant bootstrap
 CLAUDE.md
+
+# Local project bootstrap config
+.project_config
