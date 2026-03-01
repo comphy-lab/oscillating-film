@@ -1,0 +1,67 @@
+# OS
+**/.DS_Store
+**/Thumbs.db
+**/.Spotlight-V100
+**/.Trashes
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Build prerequisites/artifacts
+*.d
+*.o
+*.obj
+*.elf
+*.ilk
+*.map
+*.exp
+*.gch
+*.pch
+*.lib
+*.a
+*.la
+*.lo
+*.dll
+*.so
+*.so.*
+*.dylib
+*.exe
+*.out
+*.app
+*.i*86
+*.x86_64
+*.hex
+*.dSYM/
+*.su
+*.idb
+*.pdb
+*.mod*
+*.cmd
+.tmp_versions/
+modules.order
+Module.symvers
+*.dwo
+
+# Runtime output
+*.err
+slurm-*.out
+slurm-*.err
+
+# Simulation case outputs
+simulationCases/[0-9][0-9][0-9][0-9]/
+**/docs/simulationCases/[0-9][0-9][0-9][0-9]/
+
+# Generated visualization/output
+display.html
+
+# Local lock files
+**/.comphy-lock
+
+# Local Basilisk checkout (external dependency)
+basilisk/
+
+# Local assistant bootstrap
+CLAUDE.md

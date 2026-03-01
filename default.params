@@ -1,0 +1,30 @@
+# default.params
+# Base parameter file for oscillating thin-film simulations.
+# Media: lower (f1), film (f), upper (f2).
+
+CaseNo=1000
+
+# Numerical controls
+MAXlevel=9
+tmax=10.0
+
+# Lower medium (f1)
+Ohl=1e-1
+Ecl=0.0
+Del=0.0
+
+# Film (f)
+Ohf=1e-2
+hf=2e-2
+Ecf=0.0
+Def=0.0
+
+# Upper medium (f2)
+Ohu=1e-1
+Ecu=0.0
+Deu=0.0
+
+# Initial interface perturbation:
+# y_f1(x) = amp*sin(k*x), y_f2(x) = hf + amp*sin(k*x), k = 2*pi/lambda_wave
+amp=5e-2
+lambda_wave=2.0
