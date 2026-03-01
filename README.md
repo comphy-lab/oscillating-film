@@ -1,59 +1,82 @@
 # oscillating-film
 
-Basilisk CFD setup for simulating an oscillating three-phase thin film with optional viscoelastic effects.
+Basilisk CFD workflow for oscillating three-phase thin-film simulations with optional viscoelastic effects.
 
 ## Overview
 
-This repository contains a reproducible simulation workflow around `simulationCases/oscillatingFilm.c` and project-specific headers in `src-local/`. The `runSimulation.sh` wrapper handles case setup, compilation with `qcc`, and execution (serial or MPI).
-
-## Structure
-
-```text
-oscillating-film/
-├── basilisk/                  # Local Basilisk checkout (ignored by git)
-├── simulationCases/           # Case templates and generated case runs
-│   └── oscillatingFilm.c      # Primary simulation source
-├── src-local/                 # Project-local Basilisk headers/utilities
-├── default.params             # Default parameter set
-├── runSimulation.sh           # End-to-end run script
-└── .project_config            # Local BASILISK path bootstrap
-```
+This repository uses a CoMPhy-style layout:
+- simulation source in `simulationCases/*.c`
+- shared project headers/parsers in `src-local/`
+- post-processing scripts in `postProcess/`
+- runtime orchestration via `runSimulation.sh` and `runParameterSweep.sh`
 
 ## Requirements
 
 - Bash
-- Basilisk source available at `basilisk/src` locally (configured via `.project_config`)
-- `qcc` in `PATH` (provided by `basilisk/src`)
+- Local Basilisk checkout available at `basilisk/` (ignored by git)
+- `qcc` in `PATH` (via `.project_config`)
 - Optional MPI tools for parallel runs: `mpicc`, `mpirun`
+- Optional post-processing tools: `python3`, `numpy`, `matplotlib`, `ffmpeg`
 
-Local setup for Basilisk:
+Example Basilisk setup:
 
 ```bash
 git clone https://github.com/comphy-lab/basilisk.git basilisk
 ```
 
-## Usage
+## Quick Start
 
 ```bash
-# Serial run with default parameters
+# Run one case with default parameters
 bash runSimulation.sh
 
-# Serial run with explicit parameter file
-bash runSimulation.sh default.params
+# Run one case with MPI
+bash runSimulation.sh default.params --mpi --CPUs 4
 
-# MPI run with 8 ranks
-bash runSimulation.sh default.params --mpi --CPUs 8
+# Preview generated sweep cases without running simulations
+bash runParameterSweep.sh --dry-run
+
+# Run sweep cases (serial)
+bash runParameterSweep.sh sweep.params
 ```
 
-Simulation output is written to `simulationCases/<CaseNo>/`, where `CaseNo` is read from the parameter file.
+## Repository Structure
 
-## Parameters
+```
+oscillating-film/ - repository root
+├── AGENTS.md - project guidance for coding agents
+├── README.md - project usage and structure
+├── default.params - default single-run runtime parameters
+├── sweep.params - sweep definition (`SWEEP_*`, `CASE_START`, `CASE_END`)
+├── runSimulation.sh - single-case runner (creates `simulationCases/<CaseNo>/`)
+├── runParameterSweep.sh - sweep generator/runner built on `src-local/parse_params.sh`
+├── simulationCases/ - simulation source and generated case directories
+│   └── oscillatingFilm.c - primary Basilisk simulation entry point
+├── src-local/ - local headers and parser helpers
+│   ├── parse_params.h - low-level C key/value parser for runtime params
+│   ├── params.h - typed C accessors (`param_int`, `param_double`, ...)
+│   └── parse_params.sh - shared shell parser/sweep helper library
+├── postProcess/ - visualization and data extraction tools
+│   ├── Video-film-generic.py - snapshot-to-frame/video pipeline (supports `--cpus`)
+│   ├── getFacet-threePhase.c - interface facet extractor helper source
+│   └── getData-elastic-nonCoalescence.c - field sampler helper source
+├── basilisk/ - local Basilisk checkout (ignored by git)
+└── .project_config - exports `BASILISK` and updates `PATH`
+```
 
-Edit `default.params` (or pass another params file) to control:
-- mesh and runtime (`MAXlevel`, `tmax`)
-- material properties for lower/film/upper media
-- initial perturbation (`amp`, `lambda_wave`)
+## Parameter Model
 
-## License
+- `default.params` stores baseline runtime values for a single run.
+- `sweep.params` defines sweep combinations using `SWEEP_<key>=v1,v2,...`.
+- `runSimulation.sh` copies the selected params file to `simulationCases/<CaseNo>/case.params` and executes the binary with `case.params` as `argv[1]`.
+- `simulationCases/oscillatingFilm.c` reads params through `params_init_from_argv(argc, argv)` and typed `param_*` accessors.
 
-No license file is currently included.
+## Post-Processing Notes
+
+`postProcess/Video-film-generic.py` supports deterministic serial/parallel frame rendering:
+
+```bash
+python3 postProcess/Video-film-generic.py --case-dir simulationCases/1001 --cpus 4
+```
+
+Use `--max-frames` and `--skip-video` for quick checks.

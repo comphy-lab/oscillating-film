@@ -4,24 +4,13 @@
 # Run a single oscillating-film simulation from the repository root.
 # The script creates simulationCases/<CaseNo>/, copies the parameter file and
 # source file, compiles the selected case, and runs it.
-#
-# Usage:
-#   bash runSimulation.sh [params_file] [--exec exec_code] [--mpi] [--CPUs N]
-#
-# Examples:
-#   bash runSimulation.sh
-#   bash runSimulation.sh default.params
-#   bash runSimulation.sh default.params --exec oscillatingFilm.c
-#   bash runSimulation.sh --exec oscillatingFilm default.params
-#   bash runSimulation.sh default.params --mpi
-#   bash runSimulation.sh default.params --mpi --CPUs 8
 
 set -euo pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 usage() {
-  cat <<'EOF'
+  cat <<'EOF_USAGE'
 Usage: bash runSimulation.sh [params_file] [--exec exec_code] [OPTIONS]
 
 Arguments:
@@ -32,26 +21,7 @@ Options:
   --mpi         Compile/run with MPI (qcc + mpicc wrapper, mpirun)
   --CPUs N      MPI process count for --mpi (default: 4)
   -h, --help    Show this help message
-EOF
-}
-
-get_param_value() {
-  local key="$1"
-  local file="$2"
-  awk -F '=' -v key="$key" '
-    /^[[:space:]]*#/ { next }
-    {
-      k = $1
-      gsub(/^[[:space:]]+|[[:space:]]+$/, "", k)
-      if (k == key) {
-        v = $2
-        sub(/[[:space:]]*#.*/, "", v)
-        gsub(/^[[:space:]]+|[[:space:]]+$/, "", v)
-        print v
-        exit
-      }
-    }
-  ' "$file"
+EOF_USAGE
 }
 
 # Defaults
@@ -140,6 +110,40 @@ if [[ ! "$PARAM_FILE" = /* ]]; then
   PARAM_FILE="${SCRIPT_DIR}/${PARAM_FILE}"
 fi
 
+if [[ ! -f "$PARAM_FILE" ]]; then
+  echo "ERROR: Parameter file not found: $PARAM_FILE" >&2
+  exit 1
+fi
+
+PARSER_HELPER="${SCRIPT_DIR}/src-local/parse_params.sh"
+if [[ ! -f "$PARSER_HELPER" ]]; then
+  echo "ERROR: Shared parser helper not found: $PARSER_HELPER" >&2
+  exit 1
+fi
+# shellcheck disable=SC1090
+source "$PARSER_HELPER"
+
+if ! parse_param_file "$PARAM_FILE"; then
+  echo "ERROR: Failed to parse parameter file: $PARAM_FILE" >&2
+  exit 1
+fi
+
+CASE_NO="$(get_param "CaseNo")"
+if [[ -z "$CASE_NO" ]]; then
+  echo "ERROR: CaseNo not found in parameter file: $PARAM_FILE" >&2
+  exit 1
+fi
+if [[ ! "$CASE_NO" =~ ^[0-9]+$ ]]; then
+  echo "ERROR: CaseNo must be numeric, got: $CASE_NO" >&2
+  exit 1
+fi
+
+SRC_FILE_ORIG="${SCRIPT_DIR}/simulationCases/${EXEC_CODE}"
+if [[ ! -f "$SRC_FILE_ORIG" ]]; then
+  echo "ERROR: Source file not found: $SRC_FILE_ORIG" >&2
+  exit 1
+fi
+
 # Source project configuration
 if [[ -f "${SCRIPT_DIR}/.project_config" ]]; then
   # shellcheck disable=SC1091
@@ -163,28 +167,6 @@ if [[ $USE_MPI -eq 1 ]]; then
     echo "ERROR: mpirun not found in PATH (required for --mpi)" >&2
     exit 1
   fi
-fi
-
-if [[ ! -f "$PARAM_FILE" ]]; then
-  echo "ERROR: Parameter file not found: $PARAM_FILE" >&2
-  exit 1
-fi
-
-SRC_FILE_ORIG="${SCRIPT_DIR}/simulationCases/${EXEC_CODE}"
-if [[ ! -f "$SRC_FILE_ORIG" ]]; then
-  echo "ERROR: Source file not found: $SRC_FILE_ORIG" >&2
-  exit 1
-fi
-
-CASE_NO="$(get_param_value "CaseNo" "$PARAM_FILE")"
-if [[ -z "$CASE_NO" ]]; then
-  echo "ERROR: CaseNo not found in parameter file: $PARAM_FILE" >&2
-  exit 1
-fi
-
-if [[ ! "$CASE_NO" =~ ^[0-9]+$ ]]; then
-  echo "ERROR: CaseNo must be numeric, got: $CASE_NO" >&2
-  exit 1
 fi
 
 CASE_DIR="${SCRIPT_DIR}/simulationCases/${CASE_NO}"
@@ -230,14 +212,14 @@ fi
 
 if [[ $USE_MPI -eq 1 ]]; then
   echo "Running: mpirun -np ${MPI_CPUS} ./${EXECUTABLE_NAME} case.params"
-  if mpirun -np "$MPI_CPUS" ./"$EXECUTABLE_NAME" case.params; then
+  if mpirun -np "$MPI_CPUS" ."/$EXECUTABLE_NAME" case.params; then
     EXIT_CODE=0
   else
     EXIT_CODE=$?
   fi
 else
   echo "Running: ./${EXECUTABLE_NAME} case.params"
-  if ./"$EXECUTABLE_NAME" case.params; then
+  if ."/$EXECUTABLE_NAME" case.params; then
     EXIT_CODE=0
   else
     EXIT_CODE=$?

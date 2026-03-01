@@ -1,0 +1,10 @@
+# sweep.params
+# Parameter sweep definition for oscillating-film runs.
+
+BASE_CONFIG=default.params
+CASE_START=2000
+CASE_END=2003
+
+# Cartesian sweep values (comma separated)
+SWEEP_Ohf=1e-2,5e-2
+SWEEP_amp=5e-2,1e-1

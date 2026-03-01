@@ -67,7 +67,12 @@ int main(int argc, char const *argv[]) {
   Ecu = param_double("Ecu", 0.0);
   Deu = param_double("Deu", 0.0);
 
-  Ldomain = 1e0;
+  Ldomain = param_double("Ldomain", 1e0);
+  if (Ldomain <= 0.0) {
+    fprintf (ferr,
+             "WARNING: Ldomain must be > 0. Resetting Ldomain to 1.0.\n");
+    Ldomain = 1.0;
+  }
 
   amp = param_double("amp", 2.5e-1);
   lambda_wave = param_double("lambda_wave", Ldomain);
