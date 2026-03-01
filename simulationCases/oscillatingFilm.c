@@ -1,5 +1,25 @@
 /**
-# bioFilm.c
+# Oscillating Film Simulation (`oscillatingFilm.c`)
+
+Axisymmetric three-phase oscillating thin-film configuration with optional
+viscoelastic stresses in each phase.
+
+## Runtime Inputs
+
+The case reads `key=value` pairs from `argv[1]` via `params.h`
+(`case.params` when no argument is supplied). Common keys include:
+
+- `MAXlevel`, `tmax`, `Ldomain`
+- `Ohl`, `Ecl`, `Del` (lower medium)
+- `Ohf`, `hf`, `Ecf`, `Def` (film medium)
+- `Ohu`, `Ecu`, `Deu` (upper medium)
+- `amp`, `lambda_wave`
+
+## Outputs
+
+- Restart file: `restart`
+- Snapshots: `intermediate/snapshot-*`
+- Log file: `log`
 */
 
 #include "params.h"
@@ -11,6 +31,8 @@
 
 /**
 ## Numerical Tolerances
+
+Adaptive criteria for interface, curvature, velocity, and conformation fields.
 */
 #define fErr (1e-3) // error tolerance in VOF
 #define KErr (1e-4) // error tolerance in KAPPA
@@ -27,7 +49,7 @@ double tmax;
 /**
 ## Material Parameters
 
-lower medium (`l`), Film film (`f`), and upper medium (`u`) parameter sets.
+Lower medium (`l`), film medium (`f`), and upper medium (`u`) parameter sets.
 */
 double Ohl, Ecl, Del;
 double Ohf, hf, Ecf, Def;
@@ -38,7 +60,8 @@ double amp, lambda_wave, k_wave;
 /**
 ## main()
 
-Initialize properties and forcing, then enter the Basilisk event loop.
+Loads runtime parameters, initializes domain/material properties, and enters
+the Basilisk event loop.
 */
 int main(int argc, char const *argv[]) {
 
@@ -108,7 +131,7 @@ int main(int argc, char const *argv[]) {
 /**
 ## init()
 
-Initialize interfaces unless a restart snapshot is available.
+Initializes interfaces unless a restart snapshot is available.
 */
 event init(t = 0){
   if (!restore (file = "restart")) {
@@ -140,7 +163,7 @@ event adapt(i++){
 /**
 ## writingFiles()
 
-Write periodic restart and snapshot files.
+Writes periodic restart and snapshot files.
 */
 event writingFiles (t = 0, t += tsnap; t <= tmax+tsnap) {
   dump (file = "restart");
@@ -152,7 +175,7 @@ event writingFiles (t = 0, t += tsnap; t <= tmax+tsnap) {
 /**
 ## logWriting()
 
-Log kinetic energy and droplet center-of-mass velocity.
+Logs kinetic energy and interface position diagnostics over time.
 */
 
 scalar X1[];

@@ -5,6 +5,15 @@ Low-level runtime key/value parameter parser for oscillating-film cases.
 
 Parses plain `key=value` files, strips whitespace, ignores `#` comments, and
 stores the most recent value for each key.
+
+## Usage
+
+Include this header and call:
+
+1. `parse_params_init_from_argv(argc, argv)` or `parse_params_load(file)`
+2. `parse_params_get_string(key, default_value)` for retrieval
+
+This header is used by [params.h](params.h) to provide typed accessors.
 */
 
 #ifndef OSCILLATING_FILM_PARSE_PARAMS_H
@@ -15,6 +24,11 @@ stores the most recent value for each key.
 #include <stdio.h>
 #include <string.h>
 
+/**
+## Compile-Time Limits
+
+Upper bounds for in-memory parameter table size and key/value string lengths.
+*/
 #ifndef PARSE_PARAMS_MAX_ENTRIES
 #define PARSE_PARAMS_MAX_ENTRIES 256
 #endif
@@ -27,6 +41,9 @@ stores the most recent value for each key.
 #define PARSE_PARAMS_VALUE_LEN 256
 #endif
 
+/**
+## Data Structures
+*/
 typedef struct {
   char key[PARSE_PARAMS_KEY_LEN];
   char value[PARSE_PARAMS_VALUE_LEN];
@@ -47,6 +64,11 @@ static ParseParamsState _parse_params_state = {
   .file = "case.params",
 };
 
+/**
+### parse_params_trim()
+
+Trims leading and trailing whitespace in-place.
+*/
 static inline char *parse_params_trim(char *s)
 {
   if (!s)
@@ -62,6 +84,11 @@ static inline char *parse_params_trim(char *s)
   return s;
 }
 
+/**
+### parse_params_find_key()
+
+Returns the entry index for `key`, or `-1` when the key is not loaded.
+*/
 static inline int parse_params_find_key(const char *key)
 {
   for (int i = 0; i < _parse_params_state.count; i++)
@@ -70,6 +97,11 @@ static inline int parse_params_find_key(const char *key)
   return -1;
 }
 
+/**
+### parse_params_set_value()
+
+Inserts or updates a key in the internal table.
+*/
 static inline void parse_params_set_value(const char *key, const char *value)
 {
   int idx = parse_params_find_key(key);
@@ -91,6 +123,17 @@ static inline void parse_params_set_value(const char *key, const char *value)
   _parse_params_state.entries[idx].value[PARSE_PARAMS_VALUE_LEN - 1] = '\0';
 }
 
+/**
+### parse_params_load()
+
+Loads key/value pairs from `filename` into the internal table.
+
+#### Notes
+
+- Lines without `=` are ignored.
+- `#` starts an inline comment.
+- Empty keys/values are ignored.
+*/
 static inline int parse_params_load(const char *filename)
 {
   _parse_params_state.count = 0;
@@ -136,6 +179,12 @@ static inline int parse_params_load(const char *filename)
   return 0;
 }
 
+/**
+### parse_params_init_from_argv()
+
+Selects parameter file from `argv[1]` when present, otherwise uses
+`case.params`, then loads it.
+*/
 static inline void parse_params_init_from_argv(int argc, const char *argv[])
 {
   if (argc > 1 && argv[1] && argv[1][0]) {
@@ -149,17 +198,32 @@ static inline void parse_params_init_from_argv(int argc, const char *argv[])
   (void) parse_params_load(_parse_params_state.file);
 }
 
+/**
+### parse_params_current_file()
+
+Returns the current parameter-file path used by the parser state.
+*/
 static inline const char *parse_params_current_file(void)
 {
   return _parse_params_state.file;
 }
 
+/**
+### parse_params_ensure_loaded()
+
+Loads the current parameter file lazily if the table is not loaded yet.
+*/
 static inline void parse_params_ensure_loaded(void)
 {
   if (!_parse_params_state.loaded)
     (void) parse_params_load(_parse_params_state.file);
 }
 
+/**
+### parse_params_get_string()
+
+Returns the string value for `key`, or `default_value` when absent.
+*/
 static inline const char *parse_params_get_string(const char *key,
                                                   const char *default_value)
 {

@@ -5,6 +5,15 @@ Typed runtime parameter accessors for oscillating-film simulation cases.
 
 `params_init_from_argv(argc, argv)` loads `argv[1]` when provided, otherwise
 falls back to `case.params`.
+
+## API
+
+- `params_load(file)`: explicit load
+- `params_init_from_argv(argc, argv)`: argv-aware load
+- `param_string(key, default)`
+- `param_double(key, default)`
+- `param_int(key, default)`
+- `param_bool(key, default)`
 */
 
 #ifndef OSCILLATING_FILM_PARAMS_H
@@ -20,6 +29,11 @@ falls back to `case.params`.
 #include <stdlib.h>
 #include <strings.h>
 
+/**
+## Loader Wrappers
+
+Thin wrappers around `parse_params.h` to keep call sites concise.
+*/
 static inline int params_load(const char *filename)
 {
   return parse_params_load(filename);
@@ -30,11 +44,21 @@ static inline void params_init_from_argv(int argc, const char *argv[])
   parse_params_init_from_argv(argc, argv);
 }
 
+/**
+### param_string()
+
+Returns a raw string value or fallback when key is missing.
+*/
 static inline const char *param_string(const char *key, const char *default_value)
 {
   return parse_params_get_string(key, default_value);
 }
 
+/**
+### param_double()
+
+Parses a `double` with fallback and warning on malformed values.
+*/
 static inline double param_double(const char *key, double default_value)
 {
   const char *s = param_string(key, NULL);
@@ -57,6 +81,11 @@ static inline double param_double(const char *key, double default_value)
   return v;
 }
 
+/**
+### param_int()
+
+Parses an `int` with range checks, fallback, and warning on malformed values.
+*/
 static inline int param_int(const char *key, int default_value)
 {
   const char *s = param_string(key, NULL);
@@ -80,6 +109,12 @@ static inline int param_int(const char *key, int default_value)
   return (int) v;
 }
 
+/**
+### param_bool()
+
+Accepts common boolean spellings (`1/0`, `true/false`, `yes/no`, `on/off`)
+and falls back to default on invalid strings.
+*/
 static inline bool param_bool(const char *key, bool default_value)
 {
   const char *s = param_string(key, NULL);
